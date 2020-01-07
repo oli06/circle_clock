@@ -7,6 +7,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'dart:developer';
 
+import 'package:analog_clock/circle.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_clock_helper/model.dart';
 import 'package:flutter/material.dart';
@@ -189,80 +190,100 @@ class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
         value: time,
       ),
       child: Center(
-          child: Stack(
-        alignment: Alignment.center,
-        children: <Widget>[
-          Text(
-            _now.hour.toString(),
-            style: TextStyle(fontSize: 140, fontWeight: FontWeight.w200),
+        child: Circle(
+          animationController: _animationController,
+          circleLineContent: _animationController.value.toStringAsFixed(0),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: <Color>[
+              Color(0xff2196F3),
+              Color(0xff4CAF50),
+              Color(0xffFFEB3B),
+              Color(0xffFF5722),
+              Color(0xffE91E63),
+              Color(0xff9E9E9E),
+            ],
           ),
-          Positioned(
-            top: MediaQuery.of(context).size.height * 0.25 + textHeight * 0.3,
-            left: MediaQuery.of(context).size.height * 0.25 - textWidth * 0.5,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Container(
-                  height: 50,
-                  width: 50,
-                  child: FlareActor("assets/rain.flr",
-                      animation: "Untitled", color: Colors.black),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 7.0),
-                  child: Text(
-                    _temperature,
-                    style: TextStyle(
-                      fontSize: 18,
+          showIndicators: true,
+          content: <Widget>[
+            Text(
+              _now.hour.toString(),
+              style: TextStyle(fontSize: 140, fontWeight: FontWeight.w200),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.25 + textHeight * 0.3,
+              left: MediaQuery.of(context).size.height * 0.25 - textWidth * 0.5,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                    height: 50,
+                    width: 50,
+                    child: FlareActor("assets/rain.flr",
+                        animation: "Untitled", color: Colors.black),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 7.0),
+                    child: Text(
+                      _temperature,
+                      style: TextStyle(
+                        fontSize: 18,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          CustomPaint(
-            painter: IndicatorPainter(),
-            size: Size(MediaQuery.of(context).size.height * 0.5,
-                MediaQuery.of(context).size.height * 0.5),
-          ),
-          CustomPaint(
-            painter: CirclePainter(_animationController),
-            size: Size(MediaQuery.of(context).size.height * 0.5,
-                MediaQuery.of(context).size.height * 0.5),
-          ),
-        ],
-      )),
-    );
-  }
-}
-
-class SecondPainter extends CustomPainter {
-  final Animation<double> _animation;
-
-  SecondPainter(this._animation) : super(repaint: _animation);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.grey
-      ..strokeWidth = 4;
-    canvas.drawRRect(
-        RRect.fromLTRBAndCorners(
-          0,
-          size.height - 16,
-          _animation.value * size.width,
-          size.height - 14,
-          topLeft: Radius.circular(2),
-          bottomLeft: Radius.circular(2),
-          bottomRight: Radius.circular(2),
-          topRight: Radius.circular(2),
+          ],
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.height,
         ),
-        paint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return true;
+        /*Stack(
+          alignment: Alignment.center,
+          children: <Widget>[
+            Text(
+              _now.hour.toString(),
+              style: TextStyle(fontSize: 140, fontWeight: FontWeight.w200),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.25 + textHeight * 0.3,
+              left: MediaQuery.of(context).size.height * 0.25 - textWidth * 0.5,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                    height: 50,
+                    width: 50,
+                    child: FlareActor("assets/rain.flr",
+                        animation: "Untitled", color: Colors.black),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 7.0),
+                    child: Text(
+                      _temperature,
+                      style: TextStyle(
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            CustomPaint(
+              painter: IndicatorPainter(),
+              size: Size(MediaQuery.of(context).size.height * 0.5,
+                  MediaQuery.of(context).size.height * 0.5),
+            ),
+            CustomPaint(
+              painter: CirclePainter(_animationController),
+              size: Size(MediaQuery.of(context).size.height * 0.5,
+                  MediaQuery.of(context).size.height * 0.5),
+            ),
+          ],
+        ),*/
+      ),
+    );
   }
 }
 
@@ -273,10 +294,12 @@ class CirclePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final radius = size.width * 0.5;
+    final origin = math.Point(size.width * 0.5, size.height * 0.5);
+
     final circlePaint = Paint()
-      ..color = Colors.grey
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 7;
+      ..strokeWidth = 9;
 
     final gradient = LinearGradient(
       begin: Alignment.topCenter,
@@ -293,6 +316,7 @@ class CirclePainter extends CustomPainter {
 
     circlePaint.shader = gradient
         .createShader(new Rect.fromLTWH(0.0, 0.0, size.width, size.height));
+
     canvas.drawArc(
       Rect.fromLTWH(0, 0, size.width, size.height),
       -math.pi / 2,
@@ -300,6 +324,64 @@ class CirclePainter extends CustomPainter {
       false,
       circlePaint,
     );
+
+    final textStyle = TextStyle(color: Colors.black, fontSize: 24);
+    final textSpan = TextSpan(
+        text: (_animation.value * 60).toStringAsFixed(0), style: textStyle);
+    final textPainter =
+        TextPainter(text: textSpan, textDirection: ui.TextDirection.ltr);
+    canvas.save();
+
+    if (_animation.value < 0.25) {
+      canvas.translate(
+          origin.x +
+              radius *
+                  math.cos(-360 * (0.25 - _animation.value) * math.pi / 180) +
+              10,
+          origin.y +
+              radius *
+                  math.sin(-360 * (0.25 - _animation.value) * math.pi / 180) +
+              10);
+      canvas.rotate(math.pi * _animation.value * 2);
+    } else if (_animation.value < 0.5) {
+      canvas.translate(
+          origin.x +
+              radius *
+                  math.cos(360 * (0.25 - _animation.value) * math.pi / 180) +
+              10,
+          origin.y +
+              radius *
+                  math.sin(360 * (0.75 - _animation.value) * math.pi / 180) +
+              10);
+      canvas.rotate(-math.pi * _animation.value * 2);
+    } else if (_animation.value < 0.75) {
+      canvas.translate(
+          origin.x +
+              radius *
+                  math.cos(360 * (0.25 - _animation.value) * math.pi / 180) -
+              10,
+          origin.y +
+              radius *
+                  math.sin(360 * (0.75 - _animation.value) * math.pi / 180) +
+              10);
+      canvas.rotate(-math.pi * _animation.value * 2);
+    } else if (_animation.value < 1) {
+      canvas.translate(
+          origin.x +
+              radius *
+                  math.cos(-360 * (0.25 - _animation.value) * math.pi / 180) -
+              10,
+          origin.y +
+              radius *
+                  math.sin(-360 * (0.25 - _animation.value) * math.pi / 180) -
+              10);
+      canvas.rotate(math.pi * _animation.value * 2);
+    }
+
+    textPainter.layout();
+
+    textPainter.paint(canvas, Offset(0, 0));
+    canvas.restore();
   }
 
   @override
@@ -328,9 +410,6 @@ class IndicatorPainter extends CustomPainter {
             math.sin(-45 * math.pi / 180) * size.height * 0.5 +
                 size.height * 0.5),
         fullMinutesPaint);
-
-    canvas.drawLine(Offset(size.width - 5, size.height / 2),
-        Offset(size.width, size.height / 2), fullMinutesPaint);
 
     canvas.drawLine(
         Offset(
@@ -375,10 +454,13 @@ class IndicatorPainter extends CustomPainter {
                 4),
         fullMinutesPaint);
 
-    canvas.drawLine(Offset(size.width / 2, size.height - 5),
+    canvas.drawLine(Offset(size.width - 4, size.height / 2),
+        Offset(size.width, size.height / 2), fullMinutesPaint);
+
+    canvas.drawLine(Offset(size.width / 2, size.height - 4),
         Offset(size.width / 2, size.height), fullMinutesPaint);
 
-    canvas.drawLine(Offset(0, size.height / 2), Offset(5, size.height / 2),
+    canvas.drawLine(Offset(0, size.height / 2), Offset(4, size.height / 2),
         fullMinutesPaint);
   }
 
