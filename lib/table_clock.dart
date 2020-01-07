@@ -3,14 +3,17 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'dart:developer';
 
+import 'package:flutter/rendering.dart';
 import 'package:flutter_clock_helper/model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:intl/intl.dart';
 import 'package:vector_math/vector_math_64.dart' show radians;
+import 'package:flare_flutter/flare_actor.dart';
 
 import 'container_hand.dart';
 import 'drawn_hand.dart';
@@ -22,86 +25,6 @@ final radiansPerTick = radians(360 / 60);
 /// Total distance traveled by an hour hand, each hour, in radians.
 final radiansPerHour = radians(360 / 12);
 final hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-final stringHours = [
-  "Null",
-  "Eins",
-  "Zwei",
-  "Drei",
-  "Vier",
-  "Fünf",
-  "Sechs",
-  "Sieben",
-  "Acht",
-  "Neun",
-  "Zehn",
-  "Elf",
-];
-final stringMinutes = [
-  "Null",
-  "Eins",
-  "Zwei",
-  "Drei",
-  "Vier",
-  "Fünf",
-  "Sechs",
-  "Sieben",
-  "Acht",
-  "Neun",
-  "Zehn",
-  "Elf",
-  "Zwölf",
-  "Dreizehn",
-  "Vierzehn",
-  "Fünfzehn",
-  "Sechzehn",
-  "Siebzehn",
-  "Achtzehn",
-  "Neunzehn",
-  "Zwanzig",
-  "Einundzwanzig",
-  "Zweiundzwanzig",
-  "Dreiundzwanzig",
-  "Vierundzwanzig",
-  "Fünfundzwanzig",
-  "Sechsundzwanzig",
-  "Siebenundzwanzig",
-  "Achtundzwanzig",
-  "Neunundzwanzig",
-  "Dreißig",
-  "Einundreißig",
-  "Zweiunddreißig",
-  "Dreiunddreißig",
-  "Vierunddreißig",
-  "Fünfunddreißig",
-  "Sechsunddreißig",
-  "Siebenunddreißig",
-  "Achtunddreißig",
-  "Neununddreißig",
-  "Vierzig",
-  "Einundvierzig",
-  "Zweiundvierzig",
-  "Dreiundvierzig",
-  "Vierundvierzig",
-  "Fünfundvierzig",
-  "Sechsundvierzig",
-  "Siebenundvierzig",
-  "Achtundvierzig",
-  "Neunundvierzig",
-  "Fünfzig",
-  "Einundfünfzig",
-  "Zweiundfünfzig",
-  "Dreiundfünfzig",
-  "Vierundfünfzig",
-  "Fünfundfünzig",
-  "Sechsundfünfzig",
-  "Siebenundfünfzig",
-  "Achtundfünfzig",
-  "Neunundfünfzig",
-];
-
-final stringTenMinutes = [
-  "Zehn","Zwanzig","Dreißig","Vierzig","Fünfzig",
-];
 
 /// A basic analog clock.
 ///
@@ -227,7 +150,7 @@ class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
       currentHour = currentHour - 12;
     }
 
-    final minuteContent = Stack(
+    /*final minuteContent = Stack(
       alignment: AlignmentDirectional.center,
       children: <Widget>[
         CustomPaint(
@@ -245,142 +168,71 @@ class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
           ),
         ),
       ],
+    );*/
+
+    RenderParagraph renderParagraph = RenderParagraph(
+      TextSpan(
+        text: _now.hour.toString(),
+        style: TextStyle(fontSize: 140, fontWeight: FontWeight.w200),
+      ),
+      textDirection: ui.TextDirection.ltr,
+      maxLines: 1,
     );
+    renderParagraph.layout(BoxConstraints());
+    double textWidth = renderParagraph.getMinIntrinsicWidth(120).ceilToDouble();
+    double textHeight =
+        renderParagraph.getMinIntrinsicHeight(120).ceilToDouble();
 
     return Semantics.fromProperties(
       properties: SemanticsProperties(
         label: 'Analog clock with time $time',
         value: time,
       ),
-      child: Container(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: hours.reversed.map((h) {
-                      TextPainter _painter;
-                      if (currentHour == h) {
-                        _painter = TextPainter(
-                            text: TextSpan(
-                                text: stringHours[currentHour].toUpperCase(),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w400,
-                                  fontSize: 26,
-                                )),
-                            textDirection: ui.TextDirection.rtl);
-                        // Call layout method so width and height of this text widget get measured
-                        _painter.layout();
-                      }
-
-                      return Expanded(
-                        child: Container(
-                          decoration: currentHour == h
-                              ? BoxDecoration(
-                                  borderRadius: BorderRadius.circular(5.0),
-                                  border: Border.all(color: Color(0xffB85B00)),
-                                )
-                              : null,
-                          constraints: BoxConstraints.expand(),
-                          child: Center(
-                            child: currentHour == h
-                                ? CustomPaint(
-                                    size: _painter.size,
-                                    painter: _GradientTextPainter(
-                                      text: stringHours[h].toUpperCase(),
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w400,
-                                        fontSize: 26,
-                                      ),
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: <Color>[
-                                          Color(0xFFF4D467),
-                                          Color(0xFFCB6A00)
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                : Text(
-                                    stringHours[h].toUpperCase(),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w300,
-                                      fontSize: 26,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                )),
-            VerticalDivider(
-              width: 1,
-              endIndent: MediaQuery.of(context).size.height / 12 * currentHour,
-            ),
-            VerticalDivider(
-              width: 1,
-              indent:
-                  MediaQuery.of(context).size.height / 12 * (currentHour + 1),
-            ),
-            Expanded(
-              flex: 1,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: hours.reversed
-                      .map(
-                        (h) => Expanded(
-                          child: Container(
-                            decoration: currentHour == h
-                                ? BoxDecoration(
-                                    borderRadius: BorderRadius.circular(5.0),
-                                    border:
-                                        Border.all(color: Color(0xffB85B00)),
-                                  )
-                                : null,
-                            child:
-                                currentHour == h ? minuteContent : Container(),
-                          ),
-                        ),
-                      )
-                      .toList(),
+      child: Center(
+          child: Stack(
+        alignment: Alignment.center,
+        children: <Widget>[
+          Text(
+            _now.hour.toString(),
+            style: TextStyle(fontSize: 140, fontWeight: FontWeight.w200),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.25 + textHeight * 0.3,
+            left: MediaQuery.of(context).size.height * 0.25 - textWidth * 0.5,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  height: 50,
+                  width: 50,
+                  child: FlareActor("assets/rain.flr",
+                      animation: "Untitled", color: Colors.black),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 7.0),
+                  child: Text(
+                    _temperature,
+                    style: TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+          CustomPaint(
+            painter: IndicatorPainter(),
+            size: Size(MediaQuery.of(context).size.height * 0.5,
+                MediaQuery.of(context).size.height * 0.5),
+          ),
+          CustomPaint(
+            painter: CirclePainter(_animationController),
+            size: Size(MediaQuery.of(context).size.height * 0.5,
+                MediaQuery.of(context).size.height * 0.5),
+          ),
+        ],
+      )),
     );
-  }
-}
-
-class MinutePainter extends CustomPainter {
-  final Animation<double> _animation;
-
-  MinutePainter(this._animation) : super(repaint: _animation);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.green
-      ..strokeWidth = 4;
-    canvas.drawRRect(
-        RRect.fromLTRBAndCorners(size.width - _animation.value * size.width,
-            size.height * 0.6, size.width, size.height,
-            topLeft: Radius.circular(5), bottomLeft: Radius.circular(5)),
-        paint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return true;
   }
 }
 
@@ -392,18 +244,147 @@ class SecondPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.yellow
+      ..color = Colors.grey
       ..strokeWidth = 4;
     canvas.drawRRect(
-        RRect.fromLTRBAndCorners(size.width - _animation.value * size.width,
-            size.height - 3, size.width, size.height,
-            topLeft: Radius.circular(5), bottomLeft: Radius.circular(5)),
+        RRect.fromLTRBAndCorners(
+          0,
+          size.height - 16,
+          _animation.value * size.width,
+          size.height - 14,
+          topLeft: Radius.circular(2),
+          bottomLeft: Radius.circular(2),
+          bottomRight: Radius.circular(2),
+          topRight: Radius.circular(2),
+        ),
         paint);
   }
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
     return true;
+  }
+}
+
+class CirclePainter extends CustomPainter {
+  final Animation<double> _animation;
+
+  CirclePainter(this._animation) : super(repaint: _animation);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final circlePaint = Paint()
+      ..color = Colors.grey
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 7;
+
+    final gradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: <Color>[
+        Color(0xff2196F3),
+        Color(0xff4CAF50),
+        Color(0xffFFEB3B),
+        Color(0xffFF5722),
+        Color(0xffE91E63),
+        Color(0xff9E9E9E),
+      ],
+    );
+
+    circlePaint.shader = gradient
+        .createShader(new Rect.fromLTWH(0.0, 0.0, size.width, size.height));
+    canvas.drawArc(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      -math.pi / 2,
+      math.pi * 2 * _animation.value,
+      false,
+      circlePaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
+  }
+}
+
+class IndicatorPainter extends CustomPainter {
+  @override
+  void paint(ui.Canvas canvas, ui.Size size) {
+    final fullMinutesPaint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 1;
+
+    canvas.drawLine(
+        Offset(
+            math.cos(-45 * math.pi / 180) * size.width * 0.5 + size.width * 0.5,
+            math.sin(-45 * math.pi / 180) * size.height * 0.5 +
+                size.height * 0.5 +
+                4),
+        Offset(
+            math.cos(-45 * math.pi / 180) * size.width * 0.5 +
+                size.width * 0.5 +
+                4,
+            math.sin(-45 * math.pi / 180) * size.height * 0.5 +
+                size.height * 0.5),
+        fullMinutesPaint);
+
+    canvas.drawLine(Offset(size.width - 5, size.height / 2),
+        Offset(size.width, size.height / 2), fullMinutesPaint);
+
+    canvas.drawLine(
+        Offset(
+            math.cos(135 * math.pi / 180) * size.width * 0.5 + size.width * 0.5,
+            math.sin(135 * math.pi / 180) * size.height * 0.5 +
+                size.height * 0.5 +
+                4),
+        Offset(
+            math.cos(135 * math.pi / 180) * size.width * 0.5 +
+                size.width * 0.5 +
+                4,
+            math.sin(135 * math.pi / 180) * size.height * 0.5 +
+                size.height * 0.5),
+        fullMinutesPaint);
+
+    canvas.drawLine(
+        Offset(
+            math.cos(45 * math.pi / 180) * size.width * 0.5 + size.width * 0.5,
+            math.sin(45 * math.pi / 180) * size.height * 0.5 +
+                size.height * 0.5 -
+                4),
+        Offset(
+            math.cos(45 * math.pi / 180) * size.width * 0.5 +
+                size.width * 0.5 +
+                4,
+            math.sin(45 * math.pi / 180) * size.height * 0.5 +
+                size.height * 0.5),
+        fullMinutesPaint);
+
+    canvas.drawLine(
+        Offset(
+            math.cos(-135 * math.pi / 180) * size.width * 0.5 +
+                size.width * 0.5,
+            math.sin(-135 * math.pi / 180) * size.height * 0.5 +
+                size.height * 0.5),
+        Offset(
+            math.cos(-135 * math.pi / 180) * size.width * 0.5 +
+                size.width * 0.5 +
+                4,
+            math.sin(-135 * math.pi / 180) * size.height * 0.5 +
+                size.height * 0.5 +
+                4),
+        fullMinutesPaint);
+
+    canvas.drawLine(Offset(size.width / 2, size.height - 5),
+        Offset(size.width / 2, size.height), fullMinutesPaint);
+
+    canvas.drawLine(Offset(0, size.height / 2), Offset(5, size.height / 2),
+        fullMinutesPaint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return false;
   }
 }
 
