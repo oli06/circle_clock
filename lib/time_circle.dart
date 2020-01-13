@@ -2,12 +2,44 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-class CirclePainter extends CustomPainter {
+class TimeCircle extends StatelessWidget {
+  const TimeCircle({
+    @required this.gradient,
+    @required this.width,
+    @required this.height,
+    @required this.text,
+    @required this.value,
+  });
+
+  final double width;
+  final double height;
+  final LinearGradient gradient;
+  final String text;
+  final double value;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size(width, height),
+      painter: _CirclePainter(
+        text: text,
+        value: value,
+        gradient: gradient,
+      ),
+    );
+  }
+}
+
+class _CirclePainter extends CustomPainter {
   final double value;
   final LinearGradient gradient;
-  final String textValue;
+  final String text;
 
-  CirclePainter(this.value, this.gradient, this.textValue);
+  _CirclePainter({
+    @required this.value,
+    @required this.gradient,
+    @required this.text,
+  });
 
   final circlePaint = Paint()
     ..style = PaintingStyle.stroke
@@ -30,12 +62,12 @@ class CirclePainter extends CustomPainter {
 
     final textStyle = TextStyle(
         color: Colors.black, fontSize: 32, fontWeight: FontWeight.w300);
-    final textSpan = TextSpan(text: textValue, style: textStyle);
+    final textSpan = TextSpan(text: text, style: textStyle);
     final textPainter =
         TextPainter(text: textSpan, textDirection: ui.TextDirection.ltr);
     canvas.save();
 
-    final minute = int.tryParse(textValue);
+    final minute = int.tryParse(text);
     if (minute == null) {
       return;
     }
@@ -64,7 +96,7 @@ class CirclePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CirclePainter oldDelegate) {
+  bool shouldRepaint(_CirclePainter oldDelegate) {
     return oldDelegate.value != value;
   }
 }

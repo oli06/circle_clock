@@ -8,6 +8,9 @@ import 'dart:ui' as ui;
 import 'dart:developer';
 
 import 'package:analog_clock/circle.dart';
+import 'package:analog_clock/clock_widget.dart';
+import 'package:analog_clock/date_widget.dart';
+import 'package:analog_clock/utils.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_clock_helper/model.dart';
 import 'package:flutter/material.dart';
@@ -16,20 +19,10 @@ import 'package:intl/intl.dart';
 import 'package:vector_math/vector_math_64.dart' show radians;
 import 'package:flare_flutter/flare_actor.dart';
 
-import 'container_hand.dart';
-import 'drawn_hand.dart';
-
 /// Total distance traveled by a second or a minute hand, each second or minute,
 /// respectively.
 final radiansPerTick = radians(360 / 60);
 
-/// Total distance traveled by an hour hand, each hour, in radians.
-final radiansPerHour = radians(360 / 12);
-final hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-
-/// A basic analog clock.
-///
-/// You can do better than this!
 class TableClock extends StatefulWidget {
   const TableClock(this.model);
 
@@ -40,26 +33,27 @@ class TableClock extends StatefulWidget {
 }
 
 class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
-  AnimationController _animationController;
-  AnimationController _secondsAnimationController;
   var _now = DateTime.now();
   var _temperature = '';
-  var _temperatureRange = '';
   var _condition = '';
-  var _location = '';
+
+  var _weatherGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: <Color>[
+      Color(0xff2196F3),
+      //Color(0xff4CAF50),
+      //Color(0xffFFEB3B),
+      //Color(0xffFF5722),
+      Color(0xffE91E63),
+      //Color(0xff9E9E9E),
+    ],
+  );
   Timer _timer;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-        vsync: this, duration: Duration(minutes: 60), value: _now.minute / 60);
-    _secondsAnimationController = AnimationController(
-        vsync: this, duration: Duration(seconds: 60), value: _now.second / 60);
-
-    //_animationController.forward();
-    _animationController.repeat();
-    _secondsAnimationController.repeat();
     widget.model.addListener(_updateModel);
     // Set the initial values.
     _updateTime();
@@ -78,8 +72,6 @@ class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
   @override
   void dispose() {
     _timer?.cancel();
-    _animationController.dispose();
-    _secondsAnimationController.dispose();
     widget.model.removeListener(_updateModel);
     super.dispose();
   }
@@ -87,9 +79,46 @@ class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
   void _updateModel() {
     setState(() {
       _temperature = widget.model.temperatureString;
-      _temperatureRange = '(${widget.model.low} - ${widget.model.highString})';
+
+      //setting the color gradient based on the highest and lowest temperature
+      final highest = round(widget.model.high.round());
+      final lowest = round(widget.model.low.round());
+
+      var highestPercentage = 1.0;
+      if (highest <= 15) {
+        highestPercentage = 0.4;
+      } else if (highest <= 20) {
+        highestPercentage = 0.6;
+      } else if (highest <= 25) {
+        highestPercentage = 0.8;
+      }
+
+      var lowestPercentage = 0.2;
+      if (lowest >= 10) {
+        lowestPercentage = 1.0;
+      } else if (lowest >= 5) {
+        lowestPercentage = 0.8;
+      } else if (lowest >= 0) {
+        lowestPercentage = 0.6;
+      } else if (lowest >= -5) {
+        lowestPercentage = 0.4;
+      }
+
+      List<Color> weatherColors = [];
+      weatherColors.add(
+        Color(0xff2196F3).withOpacity(lowestPercentage),
+      );
+      weatherColors.add(
+        Color(0xffE91E63).withOpacity(highestPercentage),
+      );
+
+      _weatherGradient = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: weatherColors,
+      );
+
       _condition = widget.model.weatherString;
-      _location = widget.model.location;
     });
   }
 
@@ -107,416 +136,35 @@ class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    // There are many ways to apply themes to your clock. Some are:
-    //  - Inherit the parent Theme (see ClockCustomizer in the
-    //    flutter_clock_helper package).
-    //  - Override the Theme.of(context).colorScheme.
-    //  - Create your own [ThemeData], demonstrated in [TableClock].
-    //  - Create a map of [Color]s to custom keys, demonstrated in
-    //    [DigitalClock].
-    final customTheme = Theme.of(context).brightness == Brightness.light
-        ? Theme.of(context).copyWith(
-            // Hour hand.
-            primaryColor: Colors.green,
-            // Minute hand.
-            highlightColor: Color(0xFF8AB4F8),
-            // Second hand.
-            accentColor: Color(0xFF669DF6),
-            backgroundColor: Color(0xFFD2E3FC),
-          )
-        : Theme.of(context).copyWith(
-            primaryColor: Color(0xFFD2E3FC),
-            highlightColor: Color(0xFF4285F4),
-            accentColor: Color(0xFF8AB4F8),
-            backgroundColor: Color(0xFF3C4043),
-          );
-
     final time = DateFormat.Hms().format(DateTime.now());
-    final weatherInfo = DefaultTextStyle(
-      style: TextStyle(color: customTheme.primaryColor),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(_temperature),
-          Text(_temperatureRange),
-          Text(_condition),
-          Text(_location),
-        ],
-      ),
-    );
-
-    final isPm = _now.hour > 12;
-    var currentHour = _now.hour;
-    if (isPm) {
-      currentHour = currentHour - 12;
-    }
-
-    /*final minuteContent = Stack(
-      alignment: AlignmentDirectional.center,
-      children: <Widget>[
-        CustomPaint(
-          painter: MinutePainter(_animationController),
-          size: MediaQuery.of(context).size,
-        ),
-        CustomPaint(
-            painter: SecondPainter(_secondsAnimationController),
-            size: MediaQuery.of(context).size),
-        Text(
-          stringMinutes[_now.minute].toUpperCase(),
-          style: TextStyle(
-            fontWeight: FontWeight.w400,
-            fontSize: 30,
-          ),
-        ),
-      ],
-    );*/
-
-    RenderParagraph renderParagraph = RenderParagraph(
-      TextSpan(
-        text: _now.hour.toString(),
-        style: TextStyle(fontSize: 140, fontWeight: FontWeight.w200),
-      ),
-      textDirection: ui.TextDirection.ltr,
-      maxLines: 1,
-    );
-    renderParagraph.layout(BoxConstraints());
-    double textWidth = renderParagraph.getMinIntrinsicWidth(120).ceilToDouble();
-    double textHeight =
-        renderParagraph.getMinIntrinsicHeight(120).ceilToDouble();
 
     return Semantics.fromProperties(
       properties: SemanticsProperties(
-        label: 'Analog clock with time $time',
+        label: 'Circle clock with time $time',
         value: time,
       ),
-      child: Center(
-        child: Circle(
-          animationController: _animationController,
-          circleLineContent: _animationController.value.toStringAsFixed(0),
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: <Color>[
-              Color(0xff2196F3),
-              Color(0xff4CAF50),
-              Color(0xffFFEB3B),
-              Color(0xffFF5722),
-              Color(0xffE91E63),
-              Color(0xff9E9E9E),
+      child: Container(
+        color: Colors.transparent,
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              ClockWidget(
+                date: _now,
+                gradient: _weatherGradient,
+                height: MediaQuery.of(context).size.height * 0.5,
+                width: MediaQuery.of(context).size.height * 0.5,
+                model: widget.model,
+              ),
+              DateWidget(
+                date: _now,
+                height: MediaQuery.of(context).size.height * 0.25,
+                width: MediaQuery.of(context).size.height * 0.25,
+              )
             ],
           ),
-          showIndicators: true,
-          content: <Widget>[
-            Text(
-              _now.hour.toString(),
-              style: TextStyle(fontSize: 140, fontWeight: FontWeight.w200),
-            ),
-            Positioned(
-              top: MediaQuery.of(context).size.height * 0.25 + textHeight * 0.3,
-              left: MediaQuery.of(context).size.height * 0.25 - textWidth * 0.5,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(
-                    height: 50,
-                    width: 50,
-                    child: FlareActor("assets/rain.flr",
-                        animation: "Untitled", color: Colors.black),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 7.0),
-                    child: Text(
-                      _temperature,
-                      style: TextStyle(
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.height,
         ),
-        /*Stack(
-          alignment: Alignment.center,
-          children: <Widget>[
-            Text(
-              _now.hour.toString(),
-              style: TextStyle(fontSize: 140, fontWeight: FontWeight.w200),
-            ),
-            Positioned(
-              top: MediaQuery.of(context).size.height * 0.25 + textHeight * 0.3,
-              left: MediaQuery.of(context).size.height * 0.25 - textWidth * 0.5,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(
-                    height: 50,
-                    width: 50,
-                    child: FlareActor("assets/rain.flr",
-                        animation: "Untitled", color: Colors.black),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 7.0),
-                    child: Text(
-                      _temperature,
-                      style: TextStyle(
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            CustomPaint(
-              painter: IndicatorPainter(),
-              size: Size(MediaQuery.of(context).size.height * 0.5,
-                  MediaQuery.of(context).size.height * 0.5),
-            ),
-            CustomPaint(
-              painter: CirclePainter(_animationController),
-              size: Size(MediaQuery.of(context).size.height * 0.5,
-                  MediaQuery.of(context).size.height * 0.5),
-            ),
-          ],
-        ),*/
       ),
     );
-  }
-}
-
-class CirclePainter extends CustomPainter {
-  final Animation<double> _animation;
-
-  CirclePainter(this._animation) : super(repaint: _animation);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final radius = size.width * 0.5;
-    final origin = math.Point(size.width * 0.5, size.height * 0.5);
-
-    final circlePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 9;
-
-    final gradient = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: <Color>[
-        Color(0xff2196F3),
-        Color(0xff4CAF50),
-        Color(0xffFFEB3B),
-        Color(0xffFF5722),
-        Color(0xffE91E63),
-        Color(0xff9E9E9E),
-      ],
-    );
-
-    circlePaint.shader = gradient
-        .createShader(new Rect.fromLTWH(0.0, 0.0, size.width, size.height));
-
-    canvas.drawArc(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      -math.pi / 2,
-      math.pi * 2 * _animation.value,
-      false,
-      circlePaint,
-    );
-
-    final textStyle = TextStyle(color: Colors.black, fontSize: 24);
-    final textSpan = TextSpan(
-        text: (_animation.value * 60).toStringAsFixed(0), style: textStyle);
-    final textPainter =
-        TextPainter(text: textSpan, textDirection: ui.TextDirection.ltr);
-    canvas.save();
-
-    if (_animation.value < 0.25) {
-      canvas.translate(
-          origin.x +
-              radius *
-                  math.cos(-360 * (0.25 - _animation.value) * math.pi / 180) +
-              10,
-          origin.y +
-              radius *
-                  math.sin(-360 * (0.25 - _animation.value) * math.pi / 180) +
-              10);
-      canvas.rotate(math.pi * _animation.value * 2);
-    } else if (_animation.value < 0.5) {
-      canvas.translate(
-          origin.x +
-              radius *
-                  math.cos(360 * (0.25 - _animation.value) * math.pi / 180) +
-              10,
-          origin.y +
-              radius *
-                  math.sin(360 * (0.75 - _animation.value) * math.pi / 180) +
-              10);
-      canvas.rotate(-math.pi * _animation.value * 2);
-    } else if (_animation.value < 0.75) {
-      canvas.translate(
-          origin.x +
-              radius *
-                  math.cos(360 * (0.25 - _animation.value) * math.pi / 180) -
-              10,
-          origin.y +
-              radius *
-                  math.sin(360 * (0.75 - _animation.value) * math.pi / 180) +
-              10);
-      canvas.rotate(-math.pi * _animation.value * 2);
-    } else if (_animation.value < 1) {
-      canvas.translate(
-          origin.x +
-              radius *
-                  math.cos(-360 * (0.25 - _animation.value) * math.pi / 180) -
-              10,
-          origin.y +
-              radius *
-                  math.sin(-360 * (0.25 - _animation.value) * math.pi / 180) -
-              10);
-      canvas.rotate(math.pi * _animation.value * 2);
-    }
-
-    textPainter.layout();
-
-    textPainter.paint(canvas, Offset(0, 0));
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return true;
-  }
-}
-
-class IndicatorPainter extends CustomPainter {
-  @override
-  void paint(ui.Canvas canvas, ui.Size size) {
-    final fullMinutesPaint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 1;
-
-    canvas.drawLine(
-        Offset(
-            math.cos(-45 * math.pi / 180) * size.width * 0.5 + size.width * 0.5,
-            math.sin(-45 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5 +
-                4),
-        Offset(
-            math.cos(-45 * math.pi / 180) * size.width * 0.5 +
-                size.width * 0.5 +
-                4,
-            math.sin(-45 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5),
-        fullMinutesPaint);
-
-    canvas.drawLine(
-        Offset(
-            math.cos(135 * math.pi / 180) * size.width * 0.5 + size.width * 0.5,
-            math.sin(135 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5 +
-                4),
-        Offset(
-            math.cos(135 * math.pi / 180) * size.width * 0.5 +
-                size.width * 0.5 +
-                4,
-            math.sin(135 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5),
-        fullMinutesPaint);
-
-    canvas.drawLine(
-        Offset(
-            math.cos(45 * math.pi / 180) * size.width * 0.5 + size.width * 0.5,
-            math.sin(45 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5 -
-                4),
-        Offset(
-            math.cos(45 * math.pi / 180) * size.width * 0.5 +
-                size.width * 0.5 +
-                4,
-            math.sin(45 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5),
-        fullMinutesPaint);
-
-    canvas.drawLine(
-        Offset(
-            math.cos(-135 * math.pi / 180) * size.width * 0.5 +
-                size.width * 0.5,
-            math.sin(-135 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5),
-        Offset(
-            math.cos(-135 * math.pi / 180) * size.width * 0.5 +
-                size.width * 0.5 +
-                4,
-            math.sin(-135 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5 +
-                4),
-        fullMinutesPaint);
-
-    canvas.drawLine(Offset(size.width - 4, size.height / 2),
-        Offset(size.width, size.height / 2), fullMinutesPaint);
-
-    canvas.drawLine(Offset(size.width / 2, size.height - 4),
-        Offset(size.width / 2, size.height), fullMinutesPaint);
-
-    canvas.drawLine(Offset(0, size.height / 2), Offset(4, size.height / 2),
-        fullMinutesPaint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return false;
-  }
-}
-
-class _GradientTextPainter extends CustomPainter {
-  final Gradient gradient;
-  final String text;
-  final TextStyle style;
-
-  _GradientTextPainter(
-      {Listenable repaint,
-      @required this.text,
-      @required this.style,
-      @required this.gradient})
-      : super(repaint: repaint);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint _gradientShaderPaint = new Paint()
-      ..shader = gradient
-          .createShader(new Rect.fromLTWH(0.0, 0.0, size.width, size.height));
-
-    final ui.ParagraphBuilder _builder =
-        new ui.ParagraphBuilder(ui.ParagraphStyle())
-          ..pushStyle(new ui.TextStyle(
-            foreground: _gradientShaderPaint,
-            fontSize: style.fontSize,
-            fontWeight: style.fontWeight,
-            height: style.height,
-            decoration: style.decoration,
-            decorationColor: style.decorationColor,
-            decorationStyle: style.decorationStyle,
-            fontStyle: style.fontStyle,
-            letterSpacing: style.letterSpacing,
-            fontFamily: style.fontFamily,
-            locale: style.locale,
-            textBaseline: style.textBaseline,
-            wordSpacing: style.wordSpacing,
-          ))
-          ..addText(text);
-
-    final ui.Paragraph _paragraph = _builder.build();
-    _paragraph.layout(new ui.ParagraphConstraints(width: size.width));
-
-    canvas.drawParagraph(_paragraph, Offset.zero);
-  }
-
-  @override
-  bool shouldRepaint(_GradientTextPainter oldDelegate) {
-    return gradient != oldDelegate.gradient ||
-        text != oldDelegate.text ||
-        style != oldDelegate.style;
   }
 }

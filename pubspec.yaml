@@ -9,6 +9,7 @@ dependencies:
   flutter:
     sdk: flutter
   rive: ^0.0.1
+  intl: ^0.16.0
   flutter_clock_helper:
     path: ../flutter_clock/flutter_clock_helper
   cupertino_icons: ^0.1.2

@@ -36,7 +36,7 @@ class IndicatorPainter extends CustomPainter {
             math.sin(135 * math.pi / 180) * size.height * 0.5 +
                 size.height * 0.5),
         fullMinutesPaint);
-
+        
     canvas.drawLine(
         Offset(
             math.cos(45 * math.pi / 180) * size.width * 0.5 + size.width * 0.5,
