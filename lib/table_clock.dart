@@ -3,11 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
-import 'dart:math' as math;
-import 'dart:ui' as ui;
-import 'dart:developer';
 
-import 'package:analog_clock/circle.dart';
 import 'package:analog_clock/clock_widget.dart';
 import 'package:analog_clock/date_widget.dart';
 import 'package:analog_clock/utils.dart';
@@ -17,7 +13,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:intl/intl.dart';
 import 'package:vector_math/vector_math_64.dart' show radians;
-import 'package:flare_flutter/flare_actor.dart';
 
 /// Total distance traveled by a second or a minute hand, each second or minute,
 /// respectively.
@@ -81,35 +76,17 @@ class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
       _temperature = widget.model.temperatureString;
 
       //setting the color gradient based on the highest and lowest temperature
-      final highest = round(widget.model.high.round());
-      final lowest = round(widget.model.low.round());
-
-      var highestPercentage = 1.0;
-      if (highest <= 15) {
-        highestPercentage = 0.4;
-      } else if (highest <= 20) {
-        highestPercentage = 0.6;
-      } else if (highest <= 25) {
-        highestPercentage = 0.8;
-      }
-
-      var lowestPercentage = 0.2;
-      if (lowest >= 10) {
-        lowestPercentage = 1.0;
-      } else if (lowest >= 5) {
-        lowestPercentage = 0.8;
-      } else if (lowest >= 0) {
-        lowestPercentage = 0.6;
-      } else if (lowest >= -5) {
-        lowestPercentage = 0.4;
-      }
+      final highestOpacityPercentage =
+          getHighestOpacityPercentage(round(widget.model.high.round()));
+      final lowestOpacityPercentage =
+          getLowestOpacityPercentage(round(widget.model.low.round()));
 
       List<Color> weatherColors = [];
       weatherColors.add(
-        Color(0xff2196F3).withOpacity(lowestPercentage),
+        Color(0xff2196F3).withOpacity(lowestOpacityPercentage),
       );
       weatherColors.add(
-        Color(0xffE91E63).withOpacity(highestPercentage),
+        Color(0xffE91E63).withOpacity(highestOpacityPercentage),
       );
 
       _weatherGradient = LinearGradient(

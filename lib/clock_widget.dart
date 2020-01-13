@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:analog_clock/indicator_painter.dart';
 import 'package:analog_clock/time_circle.dart';
 import 'package:flutter/material.dart';
