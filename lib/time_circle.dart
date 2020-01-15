@@ -9,9 +9,11 @@ class TimeCircle extends StatelessWidget {
     @required this.height,
     @required this.text,
     @required this.value,
+    @required this.textColor,
   });
 
   final double width;
+  final Color textColor;
   final double height;
   final LinearGradient gradient;
   final String text;
@@ -23,6 +25,7 @@ class TimeCircle extends StatelessWidget {
       size: Size(width, height),
       painter: _CirclePainter(
         text: text,
+        textColor: textColor,
         value: value,
         gradient: gradient,
       ),
@@ -34,11 +37,13 @@ class _CirclePainter extends CustomPainter {
   final double value;
   final LinearGradient gradient;
   final String text;
+  final Color textColor;
 
   _CirclePainter({
     @required this.value,
     @required this.gradient,
     @required this.text,
+    @required this.textColor,
   });
 
   final circlePaint = Paint()
@@ -60,36 +65,36 @@ class _CirclePainter extends CustomPainter {
       circlePaint,
     );
 
+    final minute = int.tryParse(text);
+    if (minute == null || minute == 0) {
+      return;
+    }
+
     final textStyle = TextStyle(
-        color: Colors.black, fontSize: 32, fontWeight: FontWeight.w300);
+      color: textColor,
+      fontSize: 36,
+      fontWeight: FontWeight.w300,
+    );
     final textSpan = TextSpan(text: text, style: textStyle);
     final textPainter =
         TextPainter(text: textSpan, textDirection: ui.TextDirection.ltr);
     canvas.save();
 
-    final minute = int.tryParse(text);
-    if (minute == null) {
-      return;
-    }
-
-    //TODO: better calculation (including text size)!
-    //compute the radians based on the current minute added by 2.5
-    //to prevent collision with the circle
-    num radians = 0;
-    if (minute >= 58) {
-      //57th minute looks great
-      radians = value - 0.5 * math.pi;
-    } else if (minute == 0) {
-      //cant divide by zero
-      return;
-    } else {
-      radians = (minute + 2.5) * value / minute - 0.5 * math.pi;
-    }
-
-    canvas.translate(size.width * 0.5 + radius * math.cos(radians),
-        size.height * 0.5 + radius * math.sin(radians));
-
     textPainter.layout();
+
+    var adjustY = textPainter.height * (0.5 - 0.5 * math.sin(value));
+    final adjustX = textPainter.width * (0.5 - 0.5 * math.cos(value));
+
+    if (minute == 59) {
+      adjustY = 0;
+    }
+
+    final x =
+        size.width * 0.5 + radius * (math.cos(value - math.pi / 2)) - adjustX;
+    final y =
+        size.height * 0.5 + radius * math.sin(value - math.pi / 2) - adjustY;
+
+    canvas.translate(x, y);
 
     textPainter.paint(canvas, Offset(0, 0));
     canvas.restore();

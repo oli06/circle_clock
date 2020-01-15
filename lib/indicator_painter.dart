@@ -1,79 +1,48 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'package:vector_math/vector_math_64.dart' show radians;
+import 'dart:developer';
 
 class IndicatorPainter extends CustomPainter {
+  final double circleExpand;
+  final Color color;
+
+  IndicatorPainter({
+    @required this.circleExpand,
+    @required this.color,
+  });
+
   @override
   void paint(ui.Canvas canvas, ui.Size size) {
     final fullMinutesPaint = Paint()
-      ..color = Colors.black
+      ..color = color
       ..strokeWidth = 1;
 
-    canvas.drawLine(
-        Offset(
-            math.cos(-45 * math.pi / 180) * size.width * 0.5 + size.width * 0.5,
-            math.sin(-45 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5 +
-                4),
-        Offset(
-            math.cos(-45 * math.pi / 180) * size.width * 0.5 +
-                size.width * 0.5 +
-                4,
-            math.sin(-45 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5),
-        fullMinutesPaint);
-
-    canvas.drawLine(
-        Offset(
-            math.cos(135 * math.pi / 180) * size.width * 0.5 + size.width * 0.5,
-            math.sin(135 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5 +
-                4),
-        Offset(
-            math.cos(135 * math.pi / 180) * size.width * 0.5 +
-                size.width * 0.5 +
-                4,
-            math.sin(135 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5),
-        fullMinutesPaint);
-        
-    canvas.drawLine(
-        Offset(
-            math.cos(45 * math.pi / 180) * size.width * 0.5 + size.width * 0.5,
-            math.sin(45 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5 -
-                4),
-        Offset(
-            math.cos(45 * math.pi / 180) * size.width * 0.5 +
-                size.width * 0.5 +
-                4,
-            math.sin(45 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5),
-        fullMinutesPaint);
-
-    canvas.drawLine(
-        Offset(
-            math.cos(-135 * math.pi / 180) * size.width * 0.5 +
-                size.width * 0.5,
-            math.sin(-135 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5),
-        Offset(
-            math.cos(-135 * math.pi / 180) * size.width * 0.5 +
-                size.width * 0.5 +
-                4,
-            math.sin(-135 * math.pi / 180) * size.height * 0.5 +
-                size.height * 0.5 +
-                4),
-        fullMinutesPaint);
-
-    canvas.drawLine(Offset(size.width - 4, size.height / 2),
-        Offset(size.width, size.height / 2), fullMinutesPaint);
-
-    canvas.drawLine(Offset(size.width / 2, size.height - 4),
-        Offset(size.width / 2, size.height), fullMinutesPaint);
-
-    canvas.drawLine(Offset(0, size.height / 2), Offset(4, size.height / 2),
-        fullMinutesPaint);
+    final radiansPerMinute = radians(360 / 60);
+    log("repaint");
+    //only draw the inidicators left to fill the circle.
+    //with an offset of two (to prevent collision with minutes text)
+    for (double value = circleExpand - math.pi * 0.5 + radiansPerMinute * 2;
+        value <= math.pi * 2 - math.pi * 0.5 + radiansPerMinute * 2;
+        value += radiansPerMinute) {
+      canvas.drawLine(
+          Offset(
+              math.cos(value) * size.width * 0.5 +
+                  size.width * 0.5 -
+                  4 * math.cos(value),
+              math.sin(value) * size.height * 0.5 +
+                  size.height * 0.5 -
+                  4 * math.sin(value)),
+          Offset(
+              math.cos(value) * size.width * 0.5 +
+                  size.width * 0.5 +
+                  (4 * math.cos(value)),
+              math.sin(value) * size.height * 0.5 +
+                  size.height * 0.5 +
+                  4 * math.sin(value)),
+          fullMinutesPaint);
+    }
   }
 
   @override

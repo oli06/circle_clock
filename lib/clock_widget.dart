@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:analog_clock/indicator_painter.dart';
 import 'package:analog_clock/time_circle.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +12,8 @@ class ClockWidget extends StatelessWidget {
   final DateTime date;
   final ClockModel model;
   final LinearGradient gradient;
+  final Color indicatorsColor;
+  final Color textColor;
 
   ClockWidget({
     Key key,
@@ -22,6 +22,8 @@ class ClockWidget extends StatelessWidget {
     @required this.date,
     @required this.gradient,
     @required this.model,
+    @required this.textColor,
+    @required this.indicatorsColor,
   }) : super(key: key);
 
   @override
@@ -104,7 +106,10 @@ class ClockWidget extends StatelessWidget {
           ),
         ),
         CustomPaint(
-          painter: IndicatorPainter(),
+          painter: IndicatorPainter(
+            circleExpand: radiansPerTick * date.minute,
+            color: indicatorsColor,
+          ),
           size: Size(width, height),
         ),
         TimeCircle(
@@ -112,6 +117,7 @@ class ClockWidget extends StatelessWidget {
           width: width,
           gradient: gradient,
           value: radiansPerTick * date.minute,
+          textColor: textColor,
           text: date.minute.toString(),
         )
       ],

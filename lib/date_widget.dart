@@ -10,11 +10,16 @@ class DateWidget extends StatelessWidget {
     @required this.date,
     @required this.height,
     @required this.width,
+    @required this.textColor,
+    @required this.circleColor,
   }) : super(key: key);
 
   final double height;
   final double width;
   final DateTime date;
+
+  final Color textColor;
+  final Color circleColor;
 
   @override
   Widget build(BuildContext context) {
@@ -22,14 +27,15 @@ class DateWidget extends StatelessWidget {
       alignment: Alignment.center,
       children: <Widget>[
         DateCircle(
-          color: Colors.grey[600],
-          min: 1,
-          value: date.day,
-          max: lastDayOfMonth(date),
-          text: date.day.toString(),
-          height: height,
-          width: width
-        ),
+            color:
+                circleColor, //Color(0xff8a8a8a), //INVERTED COLOR: 0xff757575
+            textColor: textColor,
+            min: 1,
+            value: date.day,
+            max: lastDayOfMonth(date),
+            text: date.day.toString(),
+            height: height,
+            width: width),
         Text(
           date.month.toString(),
           style: TextStyle(

@@ -32,15 +32,17 @@ class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
   var _temperature = '';
   var _condition = '';
 
+  var minuteSimulator = 0;
+
   var _weatherGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: <Color>[
-      Color(0xff2196F3),
+      Color(0xff2196F3), //INVERTED for DARK MODE: 0xffde690c
       //Color(0xff4CAF50),
       //Color(0xffFFEB3B),
       //Color(0xffFF5722),
-      Color(0xffE91E63),
+      Color(0xffE91E63), //INVERTED for DARK MODE: 0xff16e19c
       //Color(0xff9E9E9E),
     ],
   );
@@ -101,7 +103,10 @@ class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
 
   void _updateTime() {
     setState(() {
-      _now = DateTime.now();
+      //minuteSimulator += 1;
+
+      _now = DateTime.now()
+          .add(Duration(minutes: minuteSimulator, days: minuteSimulator));
       // Update once per second. Make sure to do it at the beginning of each
       // new second, so that the clock is accurate.
       _timer = Timer(
@@ -113,6 +118,14 @@ class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context).brightness == Brightness.light
+        ? Theme.of(context).copyWith(
+            canvasColor: Color(0xff8a8a8a),
+          )
+        : Theme.of(context).copyWith(
+            canvasColor: Color(0xff757575),
+          );
+
     final time = DateFormat.Hms().format(DateTime.now());
 
     return Semantics.fromProperties(
@@ -132,11 +145,15 @@ class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
                 height: MediaQuery.of(context).size.height * 0.5,
                 width: MediaQuery.of(context).size.height * 0.5,
                 model: widget.model,
+                indicatorsColor: theme.canvasColor,
+                textColor: theme.textTheme.body1.color,
               ),
               DateWidget(
                 date: _now,
                 height: MediaQuery.of(context).size.height * 0.25,
                 width: MediaQuery.of(context).size.height * 0.25,
+                textColor: theme.textTheme.body1.color,
+                circleColor: theme.canvasColor,
               )
             ],
           ),
