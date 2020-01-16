@@ -1,17 +1,24 @@
+import 'package:analog_clock/utils.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
-import 'package:vector_math/vector_math_64.dart' show radians;
-import 'dart:developer';
 
+/// Draws small indicators for every minute, starting at [circleExpand] to the end of the circle (360°, e.g.  60 minutes).
 class IndicatorPainter extends CustomPainter {
-  final double circleExpand;
-  final Color color;
-
-  IndicatorPainter({
+  /// Create a const [CustomPainter]
+  ///
+  /// All of the parameters are required and must not be null.
+  const IndicatorPainter({
     @required this.circleExpand,
     @required this.color,
-  });
+  })  : assert(circleExpand != null),
+        assert(color != null);
+
+  /// The radians the circle has already progressed.
+  final double circleExpand;
+
+  /// The [Color] of the indicators.
+  final Color color;
 
   @override
   void paint(ui.Canvas canvas, ui.Size size) {
@@ -19,13 +26,11 @@ class IndicatorPainter extends CustomPainter {
       ..color = color
       ..strokeWidth = 1;
 
-    final radiansPerMinute = radians(360 / 60);
-    log("repaint");
-    //only draw the inidicators left to fill the circle.
-    //with an offset of two (to prevent collision with minutes text)
-    for (double value = circleExpand - math.pi * 0.5 + radiansPerMinute * 2;
-        value <= math.pi * 2 - math.pi * 0.5 + radiansPerMinute * 2;
-        value += radiansPerMinute) {
+    // only draw the inidicators left to fill the circle.
+    // with an offset of two (to prevent collision with minutes text)
+    for (double value = circleExpand - math.pi * 0.5 + radiansPerTick * 2;
+        value <= math.pi * 2 - math.pi * 0.5 + radiansPerTick * 2;
+        value += radiansPerTick) {
       canvas.drawLine(
           Offset(
               math.cos(value) * size.width * 0.5 +
@@ -46,7 +51,8 @@ class IndicatorPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return false;
+  bool shouldRepaint(IndicatorPainter oldDelegate) {
+    return oldDelegate.circleExpand != circleExpand ||
+        oldDelegate.color != color;
   }
 }

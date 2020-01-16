@@ -12,11 +12,9 @@ import 'package:flutter_clock_helper/model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:intl/intl.dart';
-import 'package:vector_math/vector_math_64.dart' show radians;
 
 /// Total distance traveled by a second or a minute hand, each second or minute,
 /// respectively.
-final radiansPerTick = radians(360 / 60);
 
 class TableClock extends StatefulWidget {
   const TableClock(this.model);
@@ -118,12 +116,13 @@ class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).brightness == Brightness.light
+    final brightTheme = Theme.of(context).brightness == Brightness.light;
+    final theme = brightTheme
         ? Theme.of(context).copyWith(
-            canvasColor: Color(0xff8a8a8a),
+            canvasColor: Color(0xff757575),
           )
         : Theme.of(context).copyWith(
-            canvasColor: Color(0xff757575),
+            canvasColor: Color(0xff8a8a8a),
           );
 
     final time = DateFormat.Hms().format(DateTime.now());
@@ -134,7 +133,15 @@ class _TableClockState extends State<TableClock> with TickerProviderStateMixin {
         value: time,
       ),
       child: Container(
-        color: Colors.transparent,
+        decoration: brightTheme
+            ? BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.amberAccent, Colors.amber],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              )
+            : null,
         child: Center(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,

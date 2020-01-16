@@ -4,7 +4,13 @@ import 'package:intl/intl.dart';
 
 import 'utils.dart';
 
+/// A widget which maintains and shows date information based on [date] 
+/// 
+/// The date information is surrounded by a circle drawn with [CustomPainter]
 class DateWidget extends StatelessWidget {
+  /// Create a const [DateWidget].
+  /// 
+  /// All of the parameters are required and must not be null.
   const DateWidget({
     Key key,
     @required this.date,
@@ -12,13 +18,26 @@ class DateWidget extends StatelessWidget {
     @required this.width,
     @required this.textColor,
     @required this.circleColor,
-  }) : super(key: key);
+  })  : assert(date != null),
+        assert(height != null),
+        assert(width != null),
+        assert(textColor != null),
+        assert(circleColor != null),
+        super(key: key);
 
+  /// The vertical diameter of the circle.
   final double height;
+
+  /// The horizontal diameter of the circle.
   final double width;
+
+  /// The date information is based on this [DateTime] object.
   final DateTime date;
 
+  /// The [Color], which is used for text on the circle´s edge.
   final Color textColor;
+
+  /// The [Color] of the circle.
   final Color circleColor;
 
   @override
@@ -27,8 +46,7 @@ class DateWidget extends StatelessWidget {
       alignment: Alignment.center,
       children: <Widget>[
         DateCircle(
-            color:
-                circleColor, //Color(0xff8a8a8a), //INVERTED COLOR: 0xff757575
+            color: circleColor,
             textColor: textColor,
             min: 1,
             value: date.day,

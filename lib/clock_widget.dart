@@ -1,21 +1,18 @@
 import 'package:analog_clock/indicator_painter.dart';
 import 'package:analog_clock/time_circle.dart';
+import 'package:analog_clock/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_clock_helper/model.dart';
-import 'package:vector_math/vector_math_64.dart' show radians;
 import 'package:flare_flutter/flare_actor.dart';
 
+/// A widget that maintains and shows the main clock with information based on [date]
+///
+/// The days information are surrounded by a circle drawn with [CustomPainter]
 class ClockWidget extends StatelessWidget {
-  final radiansPerTick = radians(360 / 60);
-  final double height;
-  final double width;
-  final DateTime date;
-  final ClockModel model;
-  final LinearGradient gradient;
-  final Color indicatorsColor;
-  final Color textColor;
-
-  ClockWidget({
+  /// Create a const [ClockWidget].
+  ///
+  ///
+  const ClockWidget({
     Key key,
     @required this.height,
     @required this.width,
@@ -24,24 +21,53 @@ class ClockWidget extends StatelessWidget {
     @required this.model,
     @required this.textColor,
     @required this.indicatorsColor,
-  }) : super(key: key);
+  })  : assert(height != null),
+        assert(width != null),
+        assert(date != null),
+        assert(gradient != null),
+        assert(model != null),
+        assert(textColor != null),
+        assert(indicatorsColor != null),
+        super(key: key);
+
+  /// The vertical diameter of the circle.
+  final double height;
+
+  /// The horizontal diameter of the circle.
+  final double width;
+
+  /// The [DateTime] object, which is used.
+  final DateTime date;
+
+  /// Additional information about weather, temperature, location.
+  final ClockModel model;
+
+  /// The [LinearGradient], that is used to colorize the circle.
+  final LinearGradient gradient;
+
+  /// The [Color] of the clock indicators
+  final Color indicatorsColor;
+
+  /// [Color] for text elements in this widget
+  final Color textColor;
 
   @override
   Widget build(BuildContext context) {
     final isPm = date.hour > 12;
 
     String hourString = "";
-    String timeIndicator = "";
+    String hourIndicator = "";
 
+    // Prepare the hours based on the HourFormat.
     if (model.is24HourFormat) {
       hourString = date.hour.toString();
     } else {
       if (isPm) {
         hourString = (date.hour - 12).toString();
-        timeIndicator = "pm";
+        hourIndicator = "pm";
       } else {
         hourString = date.hour.toString();
-        timeIndicator = "am";
+        hourIndicator = "am";
       }
     }
 
@@ -58,7 +84,7 @@ class ClockWidget extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 20.0),
               child: Text(
-                timeIndicator,
+                hourIndicator,
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w300,
