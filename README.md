@@ -1,10 +1,5 @@
-# Analog Clock
+# Circle Clock
 
-This app is an example of an analog clock.
-It has a light theme and a dark theme, and displays sample weather and location data.
+Google Clock Challenge: flutter.dev/clock
 
-<img src='analog.gif' width='350'>
-
-<img src='analog_dark.png' width='350'>
-
-<img src='analog_light.png' width='350'>
+<img src='circle_clock.gif' width='350'>
