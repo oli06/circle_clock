@@ -23,9 +23,6 @@ class CircleClock extends StatefulWidget {
 
 class _CircleClockState extends State<CircleClock> {
   var _now = DateTime.now();
-
-  var minuteSimulator = 0;
-
   Timer _timer;
 
   @override
@@ -47,10 +44,6 @@ class _CircleClockState extends State<CircleClock> {
 
   void _updateTime() {
     setState(() {
-      //minuteSimulator += 1;
-
-      _now = DateTime.now()
-          .add(Duration(minutes: minuteSimulator, days: minuteSimulator));
       // Update once per second. Make sure to do it at the beginning of each
       // new second, so that the clock is accurate.
       _timer = Timer(
@@ -62,8 +55,7 @@ class _CircleClockState extends State<CircleClock> {
 
   @override
   Widget build(BuildContext context) {
-    final brightTheme = Theme.of(context).brightness == Brightness.light;
-    final theme = brightTheme
+    final theme = Theme.of(context).brightness == Brightness.light
         ? Theme.of(context).copyWith(
             canvasColor: Color(0xff757575),
           )
@@ -79,15 +71,6 @@ class _CircleClockState extends State<CircleClock> {
         value: time,
       ),
       child: Container(
-        decoration: brightTheme
-            ? BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.amberAccent, Colors.amber],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              )
-            : null,
         child: Center(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
