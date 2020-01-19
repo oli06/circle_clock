@@ -3,7 +3,6 @@ import 'package:analog_clock/time_circle.dart';
 import 'package:analog_clock/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_clock_helper/model.dart';
-import 'package:flare_flutter/flare_actor.dart';
 
 /// A widget that maintains and shows the main clock with information based on [date]
 ///
@@ -95,40 +94,9 @@ class ClockWidget extends StatelessWidget {
         ),
         Positioned(
           top: 245,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Container(
-                height: 50,
-                width: 50,
-                child: Image.asset(
-                  "assets/thunder.png",
-                ),
-              ),
-
-              /*Container(
-                        height: 50,
-                        width: 50,
-                        child: FlareActor("assets/rain.flr",
-                            animation: "Untitled", color: Colors.black),
-                      ),*/
-              Text(
-                model.temperatureString,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w300),
-              ),
-              model.low < 0
-                  ? Container(
-                      height: 50,
-                      width: 50,
-                      child: FlareActor(
-                        "assets/rain.flr",
-                        animation: "FREEZING COLD",
-                        color: Colors.black,
-                      ),
-                    )
-                  : Container(),
-            ],
+          child: Text(
+            model.low.toString() + " - " + model.temperatureString,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w300),
           ),
         ),
         CustomPaint(

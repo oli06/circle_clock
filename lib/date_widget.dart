@@ -4,12 +4,12 @@ import 'package:intl/intl.dart';
 
 import 'utils.dart';
 
-/// A widget which maintains and shows date information based on [date] 
-/// 
+/// A widget which maintains and shows date information based on [date]
+///
 /// The date information is surrounded by a circle drawn with [CustomPainter]
 class DateWidget extends StatelessWidget {
   /// Create a const [DateWidget].
-  /// 
+  ///
   /// All of the parameters are required and must not be null.
   const DateWidget({
     Key key,

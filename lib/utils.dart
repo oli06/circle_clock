@@ -23,6 +23,7 @@ int lastDayOfMonth(DateTime date) {
       : new DateTime(date.year + 1, 1, 1).subtract(Duration(days: 1)).day;
 }
 
+/*
 /// Calculates a opacity value based on the given [highestTemperature] of the day.
 double getHighestOpacityPercentage(int highestTemperature) {
   var highestPercentage = 1.0;
@@ -51,5 +52,5 @@ double getLowestOpacityPercentage(int lowestTemperature) {
   }
   return lowestPercentage;
 }
-
+*/
 final radiansPerTick = radians(360 / 60);
